@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>장유빌 만실 감사합니다~~</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="장유빌">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f4ee">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<style>
+/* 한 화면 앱: 위에 요약, 아래에 층별 호실 타일(3층이 위). 호실을 누르면 아래에서 상세 시트가 올라옴 */
+:root{
+  --bg:#f6f4ee; --surface:#ffffff; --fg:#1f2a24; --muted:#66706a; --line:#dcd8cc;
+  --accent:#2f6b4f;
+  --paid:#c9ef9f; --paid-edge:#8fcf55; --paid-ink:#2c5a12;
+  --due:#fff1a6; --due-edge:#e8c93c; --due-ink:#7a5a00;
+  --vacant:#ffffff; --vacant-edge:#d6d2c6;
+  --danger:#b4471c;
+  --font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+button,input,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:820px;margin:0 auto;padding-top:calc(env(safe-area-inset-top,0px) + 18px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px);padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h1{font-size:25px;margin:0;line-height:1.25;text-wrap:balance}
+.sub{color:var(--muted);font-size:15px;margin-top:4px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sum{border-radius:12px;padding:10px 12px;border:1.5px solid}
+.sum b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.sum span{font-size:14px}
+.sum.paid{background:var(--paid);border-color:var(--paid-edge);color:var(--paid-ink)}
+.sum.due{background:var(--due);border-color:var(--due-edge);color:var(--due-ink)}
+.sum.vacant{background:var(--vacant);border-color:var(--vacant-edge);color:var(--muted)}
+.money{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.money b{color:var(--fg)}
+.floor{display:flex;flex-direction:column;gap:8px}
+.floor h2{font-size:15px;margin:0;color:var(--muted);font-weight:600}
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.room{text-align:left;border:2px solid var(--vacant-edge);background:var(--vacant);border-radius:12px;padding:9px 10px;min-height:96px;display:flex;flex-direction:column;gap:2px;cursor:pointer}
+.room .no{font-size:20px;font-weight:700}
+.room .who{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.room .st{font-size:13px;font-weight:600;margin-top:auto}
+.room .tags{display:flex;gap:3px;flex-wrap:wrap}
+.room .tag{font-size:11px;background:rgba(0,0,0,.06);border-radius:4px;padding:0 4px}
+.room.paid{background:var(--paid);border-color:var(--paid-edge)}
+.room.paid .st{color:var(--paid-ink)}
+.room.due{background:var(--due);border-color:var(--due-edge)}
+.room.due .st{color:var(--due-ink)}
+.room.vacant .st{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:14px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;border:1.5px solid;vertical-align:-2px;margin-right:4px}
+.foot{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:0;border-radius:10px;padding:12px 16px;font-weight:600;background:var(--accent);color:#fff;min-height:46px}
+.btn.paid{background:#4f9a1c}
+.ghost{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;min-height:44px;color:var(--fg)}
+.ghost.warn{color:var(--danger);border-color:var(--danger)}
+/* bottom sheet */
+.scrim{position:fixed;inset:0;background:rgba(20,25,22,.45);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:18px 18px 0 0;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:16px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet-in{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet-head h3{margin:0;font-size:24px}
+.badge{display:inline-block;font-size:14px;font-weight:600;border-radius:8px;padding:3px 10px;border:1.5px solid}
+.badge.paid{background:var(--paid);border-color:var(--paid-edge);color:var(--paid-ink)}
+.badge.due{background:var(--due);border-color:var(--due-edge);color:var(--due-ink)}
+.badge.vacant{background:var(--vacant);border-color:var(--vacant-edge);color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:11px;min-height:44px}
+.seg button[aria-pressed=true]{background:var(--accent);color:#fff;font-weight:600}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fields .full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted)}
+label.f input,textarea{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);font-size:17px;min-height:46px;width:100%;min-width:0}
+.unit{position:relative}
+.unit input{padding-right:52px}
+.unit em{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:15px}
+.paybox{border:1.5px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.paybox p{margin:0}
+.hist{display:flex;flex-direction:column}
+.hist button{display:flex;justify-content:space-between;align-items:center;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 2px;text-align:left;min-height:44px}
+.hist button:last-child{border-bottom:0}
+.hist .ok{color:var(--paid-ink);font-weight:600}
+.hist .no{color:var(--due-ink);font-weight:600}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chk{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:10px;padding:10px;min-height:48px;font-size:16px}
+.chk input{width:22px;height:22px;accent-color:var(--accent);margin:0}
+h4{margin:0;font-size:15px;color:var(--muted);font-weight:600}
+textarea{resize:vertical;min-height:110px;line-height:1.5}
+.note{font-size:14px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:var(--fg);color:#fff;padding:10px 16px;border-radius:10px;font-size:15px;z-index:30;max-width:calc(100% - 32px)}
+@media (max-width:380px){.fields{grid-template-columns:1fr}.checks{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>장유빌 만실 감사합니다~~</h1>
+    <div class="sub" id="today"></div>
+  </header>
+
+  <div class="summary">
+    <div class="sum paid"><b id="c-paid">0</b><span>입금 완료</span></div>
+    <div class="sum due"><b id="c-due">0</b><span>입금 대기</span></div>
+    <div class="sum vacant"><b id="c-vacant">0</b><span>빈방</span></div>
+  </div>
+  <div class="money" id="money"></div>
+
+  <div id="floors"></div>
+
+  <div class="legend">
+    <span><i style="background:var(--paid);border-color:var(--paid-edge)"></i>이번 달 입금됨</span>
+    <span><i style="background:var(--due);border-color:var(--due-edge)"></i>아직 안 들어옴</span>
+    <span><i style="background:var(--vacant);border-color:var(--vacant-edge)"></i>빈방</span>
+  </div>
+
+  <div class="foot">
+    <button class="ghost" type="button" id="b-backup">백업하기</button>
+    <button class="ghost" type="button" id="b-restore">백업 불러오기</button>
+  </div>
+  <p class="note">기록은 이 휴대폰 안에만 저장돼요. 한 달에 한 번쯤 "백업하기"로 내용을 복사해서 카톡 나와의 채팅에 보내 두면 안전해요.</p>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="s-title">
+  <div class="sheet-in" id="sheet-in"></div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+  const KEY="jangyu-v1";
+  const FLOORS=[{f:3,rooms:[301,302,303,304,305,306]},{f:2,rooms:[201,202,203,204,205,206,207]},{f:1,rooms:[101,102,103,104,105,106]}];
+  const $=id=>document.getElementById(id);
+  const pad=n=>String(n).padStart(2,"0");
+  const WD=["일","월","화","수","목","금","토"];
+  let data={rooms:{}}, openNo=null, storageOk=true;
+
+  function blank(){return {vacant:true,payer:"",deposit:"",rent:"",payDay:"",payments:{},memo:"",clean:false,paper:false,floor:false};}
+  function room(no){if(!data.rooms[no])data.rooms[no]=blank();const r=data.rooms[no];if(!r.payments)r.payments={};return r;}
+  function load(){try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.rooms)data=d;}}catch(e){storageOk=false;}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){storageOk=false;toast("저장이 안 됐어요. 사파리 개인정보 보호 모드를 꺼 주세요.");}}
+
+  function today0(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+  function dueDate(y,m,day){const last=new Date(y,m+1,0).getDate();return new Date(y,m,Math.min(day,last));}
+  function periodAt(day,ref,back){ // back=0 현재 기간
+    let y=ref.getFullYear(),m=ref.getMonth();
+    if(ref<dueDate(y,m,day))m--;
+    m-=back;while(m<0){m+=12;y--;}
+    return {key:y+"-"+pad(m+1),due:dueDate(y,m,day),month:m+1};
+  }
+  const fmt=d=>(d.getMonth()+1)+"/"+d.getDate();
+  const fmtKeyDate=s=>{const p=s.split("-");return Number(p[1])+"/"+Number(p[2]);};
+  const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+  const man=v=>{const n=Number(v);return v===""||isNaN(n)?"":n.toLocaleString("ko-KR")+"만";};
+
+  function status(r){
+    if(r.vacant)return {cls:"vacant",text:"빈방"};
+    const day=Number(r.payDay);
+    if(!day)return {cls:"due",text:"입금일 미설정"};
+    const p=periodAt(day,today0(),0);
+    const paid=r.payments[p.key];
+    if(paid){return {cls:"paid",text:fmtKeyDate(paid)+" 입금",p,next:dueDate(p.due.getFullYear(),p.due.getMonth()+1,day)};}
+    return {cls:"due",text:"미입금 · "+fmt(p.due)+"일분",p};
+  }
+
+  function renderTop(){
+    const d=new Date();
+    $("today").textContent=d.getFullYear()+"년 "+(d.getMonth()+1)+"월 "+d.getDate()+"일 "+WD[d.getDay()]+"요일";
+    let paid=0,due=0,vac=0,exp=0,got=0;
+    FLOORS.forEach(F=>F.rooms.forEach(no=>{const r=room(no),s=status(r);
+      if(s.cls==="vacant")vac++;else{const rent=Number(r.rent)||0;exp+=rent;if(s.cls==="paid"){paid++;got+=rent;}else due++;}}));
+    $("c-paid").textContent=paid;$("c-due").textContent=due;$("c-vacant").textContent=vac;
+    $("money").innerHTML=exp?"이번 달 월세 <b>"+got.toLocaleString("ko-KR")+"만</b> / "+exp.toLocaleString("ko-KR")+"만 들어옴":"방을 눌러서 입주 정보와 월세를 적어 주세요.";
+  }
+  function renderRooms(){
+    const box=$("floors");box.textContent="";
+    FLOORS.forEach(F=>{
+      const sec=document.createElement("section");sec.className="floor";
+      const h=document.createElement("h2");h.textContent=F.f+"층";sec.appendChild(h);
+      const g=document.createElement("div");g.className="rooms";
+      F.rooms.forEach(no=>{
+        const r=room(no),s=status(r);
+        const b=document.createElement("button");b.type="button";b.className="room "+s.cls;
+        const n=document.createElement("span");n.className="no";n.textContent=no+"호";
+        const w=document.createElement("span");w.className="who";w.textContent=r.vacant?"":(r.payer||"입금자명 없음");
+        const tags=document.createElement("span");tags.className="tags";
+        [["clean","청소"],["paper","도배"],["floor","장판"]].forEach(([k,l])=>{if(r[k]){const t=document.createElement("span");t.className="tag";t.textContent=l+"✓";tags.appendChild(t);}});
+        const st=document.createElement("span");st.className="st";st.textContent=s.text;
+        b.append(n,w,tags,st);
+        b.setAttribute("aria-label",no+"호, "+s.text);
+        b.onclick=()=>openSheet(no);
+        g.appendChild(b);
+      });
+      sec.appendChild(g);box.appendChild(sec);
+    });
+  }
+  function renderAll(){renderTop();renderRooms();}
+
+  /* ---------- 상세 시트 ---------- */
+  function el(tag,attrs,kids){const e=document.createElement(tag);if(attrs)for(const k in attrs){if(k==="text")e.textContent=attrs[k];else if(k.startsWith("on"))e[k]=attrs[k];else e.setAttribute(k,attrs[k]);}(kids||[]).forEach(c=>c&&e.appendChild(c));return e;}
+  function field(label,key,opts){
+    const r=room(openNo);
+    const inp=el("input",{id:"f-"+key,type:"text",value:r[key]==null?"":String(r[key]),autocomplete:"off"});
+    if(opts&&opts.numeric){inp.setAttribute("inputmode","numeric");}
+    if(opts&&opts.ph)inp.setAttribute("placeholder",opts.ph);
+    inp.oninput=()=>{let v=inp.value;if(opts&&opts.numeric){v=v.replace(/[^0-9]/g,"");if(opts.max&&Number(v)>opts.max)v=String(opts.max);if(inp.value!==v)inp.value=v;}r[key]=v;save();renderAll();refreshPay();};
+    const wrap=opts&&opts.unit?el("div",{class:"unit"},[inp,el("em",{text:opts.unit})]):inp;
+    return el("label",{class:"f"+(opts&&opts.full?" full":""),for:"f-"+key},[document.createTextNode(label),wrap]);
+  }
+  function openSheet(no){
+    openNo=no;const r=room(no);
+    const box=$("sheet-in");box.textContent="";
+    const badge=el("span",{id:"s-badge",class:"badge"});
+    box.appendChild(el("div",{class:"sheet-head"},[el("h3",{id:"s-title",text:no+"호"}),badge,el("button",{class:"ghost",type:"button",text:"닫기",onclick:closeSheet})]));
+
+    const bOcc=el("button",{type:"button",text:"입주 중","aria-pressed":String(!r.vacant)});
+    const bVac=el("button",{type:"button",text:"빈방","aria-pressed":String(r.vacant)});
+    bOcc.onclick=()=>{r.vacant=false;save();renderAll();openSheet(no);};
+    bVac.onclick=()=>{r.vacant=true;save();renderAll();openSheet(no);};
+    box.appendChild(el("div",{class:"seg"},[bOcc,bVac]));
+
+    if(!r.vacant){
+      box.appendChild(el("div",{class:"fields"},[
+        field("입금자명","payer",{full:true,ph:"통장에 찍히는 이름"}),
+        field("보증금","deposit",{numeric:true,unit:"만원",ph:"예: 1000"}),
+        field("월세","rent",{numeric:true,unit:"만원",ph:"예: 50"}),
+        field("매달 입금일","payDay",{numeric:true,unit:"일",max:31,full:true,ph:"예: 5"})
+      ]));
+      box.appendChild(el("div",{class:"paybox",id:"paybox"}));
+    }
+
+    box.appendChild(el("h4",{text:"방 상태"}));
+    const checks=el("div",{class:"checks"});
+    [["clean","청소"],["paper","도배"],["floor","장판"]].forEach(([k,l])=>{
+      const c=el("input",{type:"checkbox",id:"c-"+k});c.checked=!!r[k];
+      c.onchange=()=>{r[k]=c.checked;save();renderAll();};
+      checks.appendChild(el("label",{class:"chk",for:"c-"+k},[c,document.createTextNode(l+" 완료")]));
+    });
+    box.appendChild(checks);
+
+    const memo=el("textarea",{id:"f-memo",placeholder:"메모 (연락처, 계약 만료일, 수리할 곳 등)"});memo.value=r.memo||"";
+    memo.oninput=()=>{r.memo=memo.value;save();};
+    box.appendChild(el("label",{class:"f",for:"f-memo"},[document.createTextNode("메모"),memo]));
+
+    refreshPay();
+    $("scrim").hidden=false;$("sheet").hidden=false;$("sheet").scrollTop=0;
+    document.body.style.overflow="hidden";
+  }
+  function refreshPay(){
+    const r=openNo&&room(openNo),pb=$("paybox"),badge=$("s-badge");
+    if(!r)return;
+    const s=status(r);if(badge){badge.className="badge "+s.cls;badge.textContent=s.cls==="paid"?"입금 완료":s.cls==="due"?"입금 대기":"빈방";}
+    if(!pb)return;
+    pb.textContent="";
+    const day=Number(r.payDay);
+    if(!day){pb.appendChild(el("p",{class:"note",text:"매달 입금일을 적으면 이번 달 입금 여부를 확인할 수 있어요."}));return;}
+    const p=periodAt(day,today0(),0);
+    if(s.cls==="paid"){
+      pb.appendChild(el("p",{text:p.month+"월 "+day+"일분 월세가 "+fmtKeyDate(r.payments[p.key])+"에 들어왔어요. 다음 입금일 "+fmt(s.next)+"까지 연두색으로 보여요."}));
+      pb.appendChild(el("button",{class:"ghost",type:"button",text:"입금 확인 취소",onclick:()=>{delete r.payments[p.key];save();renderAll();refreshPay();}}));
+    }else{
+      pb.appendChild(el("p",{text:p.month+"월 "+day+"일분 월세가 아직 확인되지 않았어요."}));
+      pb.appendChild(el("button",{class:"btn paid",type:"button",text:"✓ 오늘 입금 확인",onclick:()=>{r.payments[p.key]=ymd(new Date());save();renderAll();refreshPay();toast(openNo+"호 입금 확인했어요.");}}));
+    }
+    pb.appendChild(el("h4",{text:"최근 6개월 (눌러서 고치기)"}));
+    const h=el("div",{class:"hist"});
+    for(let i=0;i<6;i++){
+      const q=periodAt(day,today0(),i),v=r.payments[q.key];
+      const b=el("button",{type:"button"},[el("span",{text:q.month+"월 "+fmt(q.due)+"일분"}),el("span",{class:v?"ok":"no",text:v?fmtKeyDate(v)+" 입금 ✓":"미입금"})]);
+      b.onclick=()=>{if(r.payments[q.key])delete r.payments[q.key];else r.payments[q.key]=i===0?ymd(new Date()):ymd(q.due);save();renderAll();refreshPay();};
+      h.appendChild(b);
+    }
+    pb.appendChild(h);
+  }
+  function closeSheet(){$("scrim").hidden=true;$("sheet").hidden=true;document.body.style.overflow="";openNo=null;}
+  $("scrim").onclick=closeSheet;
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&openNo)closeSheet();});
+
+  /* ---------- 백업 ---------- */
+  let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600);}
+  function sheetSimple(title,build){
+    openNo=null;const box=$("sheet-in");box.textContent="";
+    box.appendChild(el("div",{class:"sheet-head"},[el("h3",{id:"s-title",text:title}),el("button",{class:"ghost",type:"button",text:"닫기",onclick:closeSheet})]));
+    build(box);$("scrim").hidden=false;$("sheet").hidden=false;document.body.style.overflow="hidden";
+  }
+  $("b-backup").onclick=()=>sheetSimple("백업하기",box=>{
+    const txt="장유빌백업:"+JSON.stringify(data);
+    const ta=el("textarea",{id:"bk",readonly:"readonly"});ta.value=txt;
+    box.appendChild(el("p",{class:"note",text:"아래 글을 복사해서 카톡 '나와의 채팅'에 보내 두세요. 휴대폰을 바꾸거나 기록이 지워졌을 때 '백업 불러오기'로 되살릴 수 있어요."}));
+    box.appendChild(ta);
+    box.appendChild(el("button",{class:"btn",type:"button",text:"복사하기",onclick:()=>{
+      const ok=()=>toast("복사했어요. 카톡에 붙여넣어 주세요.");
+      const fb=()=>{ta.focus();ta.select();toast("글을 길게 눌러 '복사'를 눌러 주세요.");};
+      try{navigator.clipboard.writeText(txt).then(ok,fb);}catch(e){fb();}
+    }}));
+  });
+  $("b-restore").onclick=()=>sheetSimple("백업 불러오기",box=>{
+    const ta=el("textarea",{id:"rs",placeholder:"'장유빌백업:'으로 시작하는 글을 여기에 붙여넣으세요."});
+    const msg=el("p",{class:"note",text:"불러오면 지금 기록이 백업 내용으로 바뀌어요."});
+    let armed=false;
+    const go=el("button",{class:"btn",type:"button",text:"불러오기"});
+    go.onclick=()=>{
+      let s=ta.value.trim().replace(/^장유빌백업:/,"");let d;
+      try{d=JSON.parse(s);}catch(e){msg.textContent="백업 글이 아닌 것 같아요. 처음부터 끝까지 다 붙여넣었는지 확인해 주세요.";msg.style.color="var(--danger)";return;}
+      if(!d||typeof d.rooms!=="object"){msg.textContent="장유빌 백업 내용이 아니에요.";msg.style.color="var(--danger)";return;}
+      if(!armed){armed=true;go.textContent="정말 바꿀게요";go.style.background="var(--danger)";msg.textContent="한 번 더 누르면 지금 기록이 백업 내용으로 바뀌어요.";return;}
+      data=d;save();renderAll();closeSheet();toast("백업을 불러왔어요.");
+    };
+    box.append(ta,msg,go);
+  });
+
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden){renderAll();if(openNo)refreshPay();}});
+  load();renderAll();
+  if(!storageOk)toast("이 브라우저에서는 저장이 안 돼요. 사파리 개인정보 보호 모드를 꺼 주세요.");
+  if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+})();
+</script>
+</body>
+</html>
